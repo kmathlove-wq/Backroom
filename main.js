@@ -656,16 +656,32 @@ function hideMonster(elapsed) {
 }
 
 function relocateMonster(elapsed) {
-  const forward = new THREE.Vector3(Math.sin(player.yaw), 0, -Math.cos(player.yaw));
+  const forward = new THREE.Vector3();
+  camera.getWorldDirection(forward);
+  forward.y = 0;
+  if (forward.lengthSq() < 0.001) {
+    forward.set(Math.sin(player.yaw), 0, -Math.cos(player.yaw));
+  }
+  forward.normalize();
+
   const side = new THREE.Vector3(forward.z, 0, -forward.x);
   const sideSign = Math.random() > 0.5 ? 1 : -1;
-  const distance = 18 + Math.random() * 10;
-  const sideOffset = sideSign * (2.8 + Math.random() * 2.6);
+  const distance = 16 + Math.random() * 8;
+  const sideOffset = sideSign * (1.2 + Math.random() * 1.8);
 
   monster.group.position.copy(player.position);
   monster.group.position.y = 0;
   monster.group.position.addScaledVector(forward, distance);
   monster.group.position.addScaledVector(side, sideOffset);
+
+  const toMonster = new THREE.Vector3().subVectors(monster.group.position, player.position);
+  toMonster.y = 0;
+  if (toMonster.dot(forward) < 8) {
+    monster.group.position.copy(player.position);
+    monster.group.position.y = 0;
+    monster.group.position.addScaledVector(forward, distance);
+  }
+
   monster.baseScale = 0.88 + Math.random() * 0.06;
   monster.group.scale.setScalar(monster.baseScale);
   monster.group.visible = true;
