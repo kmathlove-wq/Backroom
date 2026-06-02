@@ -105,17 +105,23 @@ body::after {
     rgba(0, 0, 0, 0.72);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 180ms ease;
+  transition: opacity 900ms ease;
 }
 
 .death-title {
-  color: #f4d28a;
+  color: #b40000;
   font-size: clamp(34px, 9vw, 92px);
   font-weight: 900;
   letter-spacing: 0;
+  opacity: 0;
+  transform: translateY(14px) scale(0.96);
   text-shadow:
-    0 0 12px rgba(255, 18, 0, 0.54),
+    0 0 18px rgba(255, 0, 0, 0.72),
+    0 0 42px rgba(120, 0, 0, 0.62),
     0 4px 22px #000;
+  transition:
+    opacity 2200ms ease,
+    transform 2200ms ease;
 }
 
 #restartButton {
@@ -134,6 +140,11 @@ body::after {
 body.dead .death-overlay {
   opacity: 1;
   pointer-events: auto;
+}
+
+body.dead .death-title {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
 
 body.dead .crosshair {

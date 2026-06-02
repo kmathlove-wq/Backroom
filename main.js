@@ -639,8 +639,8 @@ function relocateMonster(elapsed) {
   const forward = new THREE.Vector3(Math.sin(player.yaw), 0, -Math.cos(player.yaw));
   const side = new THREE.Vector3(forward.z, 0, -forward.x);
   const sideSign = Math.random() > 0.5 ? 1 : -1;
-  const distance = 18 + Math.random() * 12;
-  const sideOffset = sideSign * (4 + Math.random() * 5);
+  const distance = 20 + Math.random() * 10;
+  const sideOffset = sideSign * (0.35 + Math.random() * 1.25);
 
   monster.group.position.copy(player.position);
   monster.group.position.y = 0;
@@ -650,7 +650,7 @@ function relocateMonster(elapsed) {
   monster.group.scale.setScalar(monster.baseScale);
   monster.group.visible = true;
   monster.state = "stare";
-  monster.stateUntil = elapsed + 1.2 + Math.random() * 1.4;
+  monster.stateUntil = elapsed + 1.0 + Math.random() * 1.2;
   monster.stareTime = elapsed;
   monster.chargeSpeed = 12 + Math.random() * 4;
 }
