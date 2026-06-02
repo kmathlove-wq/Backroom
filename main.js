@@ -121,6 +121,14 @@ const blockerObjects = [];
 const flickerLights = [];
 const monster = createMonster();
 const monsterTarget = new THREE.Vector3();
+const audio = {
+  context: null,
+  master: null,
+  droneGain: null,
+  buzzGain: null,
+  flickerLevel: 0,
+  ready: false,
+};
 let pointerLocked = false;
 
 scene.add(new THREE.HemisphereLight(0xd6c064, 0x141005, 0.32));
@@ -662,9 +670,10 @@ function relocateMonster(elapsed) {
   monster.group.scale.setScalar(monster.baseScale);
   monster.group.visible = true;
   monster.state = "stare";
-  monster.stateUntil = elapsed + 1.0 + Math.random() * 1.2;
+  monster.stateUntil = elapsed + 0.35 + Math.random() * 0.55;
   monster.stareTime = elapsed;
   monster.chargeSpeed = 9.5 + Math.random() * 3.2;
+  playMonsterScream();
 }
 
 function updateMonster(elapsed, delta) {
@@ -810,6 +819,7 @@ function animate() {
   syncTiles();
   updateLights(elapsed);
   updateMonster(elapsed, delta);
+  updateAudio();
 
   camera.position.copy(player.position);
   const walking = !player.dead && player.onGround && (Math.abs(velocity.x) + Math.abs(velocity.z) > 0.45);
@@ -827,13 +837,127 @@ function animate() {
 }
 
 function updateLights(elapsed) {
+  let flickerTotal = 0;
   for (const entry of flickerLights) {
-    const buzz = Math.sin(elapsed * entry.speed + entry.phase) * 0.16;
-    const pulse = Math.sin(elapsed * 21.0 + entry.phase * 1.7) > 0.94 ? -0.55 : 0;
-    const intensity = Math.max(0.32, entry.base + buzz + pulse);
+    const buzz = Math.sin(elapsed * entry.speed + entry.phase) * 0.3;
+    const snap = Math.sin(elapsed * 18.0 + entry.phase * 1.7) > 0.86 ? -0.95 : 0;
+    const stutter = Math.sin(elapsed * 43.0 + entry.phase) > 0.965 ? -0.45 : 0;
+    const intensity = Math.max(0.12, entry.base + buzz + snap + stutter);
+    flickerTotal += Math.max(0, 1.4 - intensity);
     entry.point.intensity = intensity;
-    entry.material.color.setScalar(0.78 + intensity * 0.18);
+    entry.material.color.setScalar(0.62 + intensity * 0.22);
   }
+  audio.flickerLevel = flickerLights.length ? flickerTotal / flickerLights.length : 0;
+}
+
+function ensureAudio() {
+  if (audio.ready) {
+    if (audio.context.state === "suspended") audio.context.resume();
+    return;
+  }
+
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContext) return;
+
+  audio.context = new AudioContext();
+  audio.master = audio.context.createGain();
+  audio.master.gain.setValueAtTime(0.42, audio.context.currentTime);
+  audio.master.connect(audio.context.destination);
+
+  audio.droneGain = audio.context.createGain();
+  audio.droneGain.gain.setValueAtTime(0.12, audio.context.currentTime);
+  audio.droneGain.connect(audio.master);
+
+  for (const [frequency, gain] of [[37, 0.28], [56, 0.16], [73, 0.08]]) {
+    const osc = audio.context.createOscillator();
+    const oscGain = audio.context.createGain();
+    osc.type = frequency === 73 ? "sawtooth" : "sine";
+    osc.frequency.setValueAtTime(frequency, audio.context.currentTime);
+    oscGain.gain.setValueAtTime(gain, audio.context.currentTime);
+    osc.connect(oscGain).connect(audio.droneGain);
+    osc.start();
+  }
+
+  audio.buzzGain = audio.context.createGain();
+  audio.buzzGain.gain.setValueAtTime(0.035, audio.context.currentTime);
+  audio.buzzGain.connect(audio.master);
+
+  const buzzFilter = audio.context.createBiquadFilter();
+  buzzFilter.type = "bandpass";
+  buzzFilter.frequency.setValueAtTime(1800, audio.context.currentTime);
+  buzzFilter.Q.setValueAtTime(1.8, audio.context.currentTime);
+  buzzFilter.connect(audio.buzzGain);
+
+  const noise = audio.context.createBufferSource();
+  noise.buffer = createNoiseBuffer(2);
+  noise.loop = true;
+  noise.connect(buzzFilter);
+  noise.start();
+
+  const electricHum = audio.context.createOscillator();
+  electricHum.type = "square";
+  electricHum.frequency.setValueAtTime(60, audio.context.currentTime);
+  const humGain = audio.context.createGain();
+  humGain.gain.setValueAtTime(0.018, audio.context.currentTime);
+  electricHum.connect(humGain).connect(audio.buzzGain);
+  electricHum.start();
+
+  audio.ready = true;
+}
+
+function createNoiseBuffer(duration) {
+  const sampleRate = audio.context.sampleRate;
+  const buffer = audio.context.createBuffer(1, Math.floor(duration * sampleRate), sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < data.length; i += 1) {
+    data[i] = Math.random() * 2 - 1;
+  }
+  return buffer;
+}
+
+function updateAudio() {
+  if (!audio.ready) return;
+  const now = audio.context.currentTime;
+  const targetMaster = player.dead ? 0.18 : 0.42;
+  const targetBuzz = 0.035 + Math.min(audio.flickerLevel, 1.4) * 0.055;
+  audio.master.gain.setTargetAtTime(targetMaster, now, 0.4);
+  audio.buzzGain.gain.setTargetAtTime(targetBuzz, now, 0.035);
+  audio.droneGain.gain.setTargetAtTime(player.dead ? 0.06 : 0.12, now, 0.7);
+}
+
+function playMonsterScream() {
+  if (!audio.ready) return;
+  const now = audio.context.currentTime;
+  const screamGain = audio.context.createGain();
+  screamGain.gain.setValueAtTime(0.0001, now);
+  screamGain.gain.exponentialRampToValueAtTime(0.55, now + 0.08);
+  screamGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.35);
+  screamGain.connect(audio.master);
+
+  const high = audio.context.createOscillator();
+  high.type = "sawtooth";
+  high.frequency.setValueAtTime(930, now);
+  high.frequency.exponentialRampToValueAtTime(180, now + 1.1);
+  high.connect(screamGain);
+  high.start(now);
+  high.stop(now + 1.4);
+
+  const low = audio.context.createOscillator();
+  low.type = "triangle";
+  low.frequency.setValueAtTime(160, now);
+  low.frequency.exponentialRampToValueAtTime(62, now + 1.2);
+  low.connect(screamGain);
+  low.start(now);
+  low.stop(now + 1.4);
+
+  const noise = audio.context.createBufferSource();
+  const filter = audio.context.createBiquadFilter();
+  filter.type = "highpass";
+  filter.frequency.setValueAtTime(900, now);
+  noise.buffer = createNoiseBuffer(1.4);
+  noise.connect(filter).connect(screamGain);
+  noise.start(now);
+  noise.stop(now + 1.4);
 }
 
 function onPointerMove(event) {
@@ -845,11 +969,13 @@ function onPointerMove(event) {
 }
 
 startButton.addEventListener("click", () => {
+  ensureAudio();
   if (player.dead) resetPlayer();
   document.body.requestPointerLock();
 });
 
 restartButton.addEventListener("click", () => {
+  ensureAudio();
   resetPlayer();
   document.body.requestPointerLock();
 });

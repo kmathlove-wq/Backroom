@@ -53,6 +53,7 @@ python3 -m http.server 8000
 | `blockerObjects` | 벽/기둥 충돌 대상 |
 | `flickerLights` | 형광등 깜빡임 상태 배열 |
 | `monster` | 가끔 출현해 응시 후 돌진하는 괴물 상태 |
+| `audio` | Web Audio 배경 드론, 형광등 지직거림, 괴물 비명 상태 |
 
 ### 주요 함수
 
@@ -68,6 +69,8 @@ python3 -m http.server 8000
 | `resolveHorizontalCollision()` | 벽/기둥 수평 충돌 처리 |
 | `updateLights()` | 형광등 깜빡임과 밝기 변화 처리 |
 | `updateMonster()` | 괴물 숨김/응시/돌진/사망 상태 처리 |
+| `ensureAudio()` | 사용자 클릭 후 Web Audio 컨텍스트와 합성 사운드 초기화 |
+| `playMonsterScream()` | 괴물 출현 시 비명 합성 |
 | `animate()` | 이동, 타일 동기화, 카메라 흔들림, 렌더링 루프 |
 
 ## 게임 상수
@@ -115,7 +118,8 @@ settings.renderRadius = 3
 - `renderer.shadowMap.enabled = false` 상태를 유지한다.
 - 현실감을 높일 때도 표면 가시성이 깨지지 않는 방식을 먼저 선택한다.
 - 괴물은 이미지 에셋이 아니라 `createMonster()`가 만드는 절차적 메시다.
-- 괴물 AI는 플레이어가 바라보는 방향 근처의 옆 통로에 `hidden → stare → charge` 흐름으로 나타나며, 붉은 눈 glow와 긴 팔다리 실루엣으로 식별된다. 놓치면 오래 숨고 수평 yaw만 플레이어를 향하게 해서 천장/바닥 관통을 피한다.
+- 괴물 AI는 플레이어가 바라보는 방향 근처의 옆 통로에 `hidden → short stare → charge` 흐름으로 나타나며, 출현 시 비명음을 낸다. 놓치면 오래 숨고 수평 yaw만 플레이어를 향하게 해서 천장/바닥 관통을 피한다.
+- 사운드는 외부 파일 없이 Web Audio로 합성한다. 시작 클릭 후 배경 드론, 형광등 지직거림, 괴물 비명이 활성화된다.
 
 ## GitHub
 

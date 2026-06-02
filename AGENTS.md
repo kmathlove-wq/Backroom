@@ -47,6 +47,7 @@ python3 -m http.server 8000
 | `movePlayer()` | WASD 이동, 중력, 점프, 천장 충돌 |
 | `updateLights()` | 형광등 깜빡임 |
 | `updateMonster()` | 괴물 출현, 응시, 돌진, 사망 처리 |
+| `ensureAudio()` | 클릭 후 Web Audio 배경음/형광등 지직거림/비명 초기화 |
 
 ## 조작키
 
@@ -67,6 +68,7 @@ python3 -m http.server 8000
 - `renderer.shadowMap.enabled = false`를 유지한다.
 - 현실감을 높일 때도 먼저 “항상 보이는 장면”을 보장한다.
 - 괴물은 `createMonster()`의 절차적 Three.js 메시이며, 가끔 플레이어가 보는 방향 근처의 옆 통로에 붉은 눈 glow와 긴 팔다리 실루엣으로 출현한 뒤 돌진해서 플레이어를 죽인다.
+- 사운드는 외부 파일 없이 Web Audio로 합성한다. 배경 드론, 형광등 지직거림, 괴물 출현 비명이 있다.
 
 ## 검증
 
