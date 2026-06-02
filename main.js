@@ -120,7 +120,6 @@ const tilePatterns = [
 const blockerObjects = [];
 const flickerLights = [];
 const monster = createMonster();
-const monsterTarget = new THREE.Vector3();
 const MONSTER_GROUND_Y = 0.035;
 const audio = {
   context: null,
@@ -688,6 +687,7 @@ function relocateMonster(elapsed) {
 
   monster.baseScale = 0.96 + Math.random() * 0.07;
   monster.group.scale.setScalar(monster.baseScale);
+  faceMonsterToPlayer();
   monster.group.visible = true;
   monster.state = "stare";
   monster.stateUntil = elapsed + 0.35 + Math.random() * 0.55;
@@ -707,9 +707,7 @@ function updateMonster(elapsed, delta) {
   }
 
   const monsterPosition = monster.group.position;
-  monsterTarget.set(player.position.x, monster.group.position.y, player.position.z);
-  monster.group.lookAt(monsterTarget);
-  monster.group.rotation.z = Math.sin(elapsed * 6.8) * 0.035;
+  faceMonsterToPlayer();
   monster.group.position.y = MONSTER_GROUND_Y;
 
   const distance = horizontalMonsterDistance();
@@ -741,6 +739,14 @@ function updateMonster(elapsed, delta) {
       hideMonster(elapsed);
     }
   }
+}
+
+function faceMonsterToPlayer() {
+  const dx = player.position.x - monster.group.position.x;
+  const dz = player.position.z - monster.group.position.z;
+  if (Math.abs(dx) + Math.abs(dz) < 0.001) return;
+  const yaw = Math.atan2(dx, dz);
+  monster.group.rotation.set(0, yaw, 0);
 }
 
 function horizontalMonsterDistance() {
