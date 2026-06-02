@@ -347,42 +347,42 @@ function createMonster() {
 
   const torso = new THREE.Mesh(reusable.monsterBody, materials.monster);
   torso.name = "torso";
-  torso.position.set(0, 1.95, 0);
-  torso.scale.set(0.55, 1.45, 0.28);
+  torso.position.set(0, 1.72, 0);
+  torso.scale.set(0.36, 1.25, 0.2);
   group.add(torso);
 
   const chestRidge = new THREE.Mesh(reusable.monsterBody, materials.monsterEdge);
-  chestRidge.position.set(0.02, 2.08, -0.03);
-  chestRidge.scale.set(0.38, 1.18, 0.16);
+  chestRidge.position.set(0.02, 1.86, -0.03);
+  chestRidge.scale.set(0.25, 0.98, 0.12);
   group.add(chestRidge);
 
-  const neck = addMonsterLimb(group, new THREE.Vector3(0, 2.52, 0), new THREE.Vector3(0, 2.83, -0.03), 0.08);
+  const neck = addMonsterLimb(group, new THREE.Vector3(0, 2.34, 0), new THREE.Vector3(0, 2.62, -0.03), 0.055);
 
   const head = new THREE.Mesh(reusable.monsterHead, materials.monster);
   head.name = "head";
-  head.position.set(0, 2.96, -0.06);
-  head.scale.set(0.72, 0.48, 0.56);
+  head.position.set(0, 2.72, -0.06);
+  head.scale.set(0.68, 0.42, 0.52);
   group.add(head);
 
   for (const x of [-0.105, 0.105]) {
     const glow = new THREE.Mesh(reusable.monsterEye, materials.monsterEyeGlow);
     glow.name = "eyeGlow";
-    glow.position.set(x, 2.98, -0.365);
+    glow.position.set(x, 2.74, -0.345);
     glow.scale.set(2.7, 1.9, 2.7);
     group.add(glow);
 
     const eye = new THREE.Mesh(reusable.monsterEye, materials.monsterEye.clone());
     eye.name = "eye";
-    eye.position.set(x, 2.98, -0.36);
+    eye.position.set(x, 2.74, -0.34);
     eye.scale.set(1, 0.72, 1);
     group.add(eye);
   }
 
   const limbPoints = [
-    [new THREE.Vector3(-0.28, 2.34, 0), new THREE.Vector3(-0.88, 1.42, 0.1), new THREE.Vector3(-1.15, 0.1, -0.35)],
-    [new THREE.Vector3(0.28, 2.3, 0), new THREE.Vector3(0.92, 1.28, -0.08), new THREE.Vector3(1.24, 0.08, -0.5)],
-    [new THREE.Vector3(-0.18, 1.34, 0), new THREE.Vector3(-0.52, 0.78, 0.25), new THREE.Vector3(-0.72, 0.05, 0.66)],
-    [new THREE.Vector3(0.18, 1.34, 0), new THREE.Vector3(0.45, 0.72, -0.12), new THREE.Vector3(0.68, 0.05, -0.6)],
+    [new THREE.Vector3(-0.18, 2.16, 0), new THREE.Vector3(-0.82, 1.28, 0.08), new THREE.Vector3(-1.08, 0.08, -0.32)],
+    [new THREE.Vector3(0.18, 2.12, 0), new THREE.Vector3(0.82, 1.16, -0.08), new THREE.Vector3(1.12, 0.08, -0.44)],
+    [new THREE.Vector3(-0.12, 1.06, 0), new THREE.Vector3(-0.42, 0.58, 0.2), new THREE.Vector3(-0.74, 0.05, 0.72)],
+    [new THREE.Vector3(0.12, 1.06, 0), new THREE.Vector3(0.36, 0.55, -0.12), new THREE.Vector3(0.72, 0.05, -0.64)],
   ];
 
   for (const points of limbPoints) {
@@ -392,8 +392,8 @@ function createMonster() {
   for (let i = 0; i < 7; i += 1) {
     const hair = addMonsterLimb(
       group,
-      new THREE.Vector3((Math.random() - 0.5) * 0.28, 3.06, -0.1),
-      new THREE.Vector3((Math.random() - 0.5) * 0.68, 2.62 - Math.random() * 0.34, -0.2 - Math.random() * 0.2),
+      new THREE.Vector3((Math.random() - 0.5) * 0.22, 2.86, -0.1),
+      new THREE.Vector3((Math.random() - 0.5) * 0.58, 2.48 - Math.random() * 0.28, -0.2 - Math.random() * 0.2),
       0.014,
     );
     hair.name = "hair";
@@ -658,7 +658,7 @@ function relocateMonster(elapsed) {
   monster.group.position.y = 0;
   monster.group.position.addScaledVector(forward, distance);
   monster.group.position.addScaledVector(side, sideOffset);
-  monster.baseScale = 1.08 + Math.random() * 0.18;
+  monster.baseScale = 0.88 + Math.random() * 0.06;
   monster.group.scale.setScalar(monster.baseScale);
   monster.group.visible = true;
   monster.state = "stare";
@@ -678,10 +678,10 @@ function updateMonster(elapsed, delta) {
   }
 
   const monsterPosition = monster.group.position;
-  monsterTarget.set(player.position.x, 1.55, player.position.z);
+  monsterTarget.set(player.position.x, monster.group.position.y, player.position.z);
   monster.group.lookAt(monsterTarget);
   monster.group.rotation.z = Math.sin(elapsed * 6.8) * 0.035;
-  monster.group.position.y = Math.sin(elapsed * 9.0) * 0.025;
+  monster.group.position.y = 0;
 
   const distance = monsterPosition.distanceTo(player.position);
   if (monster.state === "stare") {
@@ -701,7 +701,7 @@ function updateMonster(elapsed, delta) {
       direction.normalize();
       monsterPosition.addScaledVector(direction, monster.chargeSpeed * delta);
     }
-    monster.group.scale.setScalar(1.05 + Math.sin(elapsed * 24) * 0.04);
+    monster.group.scale.setScalar(monster.baseScale * (1.04 + Math.sin(elapsed * 24) * 0.035));
 
     if (horizontalDistance < 1.15) {
       killPlayer();
