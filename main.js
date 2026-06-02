@@ -2,6 +2,8 @@ import * as THREE from "three";
 
 const canvas = document.querySelector("#world");
 const startButton = document.querySelector("#startButton");
+const deathOverlay = document.querySelector("#deathOverlay");
+const restartButton = document.querySelector("#restartButton");
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x080801);
@@ -37,6 +39,7 @@ const player = {
   yaw: 0,
   pitch: 0,
   onGround: true,
+  dead: false,
 };
 
 const settings = {
@@ -78,6 +81,12 @@ const reusable = {
   corridorShadow: new THREE.PlaneGeometry(6.2, 17.8),
   shortShadow: new THREE.PlaneGeometry(3.6, 4.2),
   columnShadow: new THREE.CircleGeometry(1.55, 28),
+  monsterLimb: new THREE.CylinderGeometry(0.035, 0.055, 1, 8),
+  monsterJoint: new THREE.SphereGeometry(0.085, 10, 8),
+  monsterHead: new THREE.SphereGeometry(0.34, 18, 12),
+  monsterEye: new THREE.SphereGeometry(0.035, 8, 6),
+  monsterBody: new THREE.SphereGeometry(0.42, 14, 10),
+  monsterShadow: new THREE.CircleGeometry(2.2, 32),
 };
 
 const tiles = new Map();
@@ -110,10 +119,14 @@ const tilePatterns = [
 
 const blockerObjects = [];
 const flickerLights = [];
+const monster = createMonster();
+const monsterTarget = new THREE.Vector3();
 let pointerLocked = false;
 
 scene.add(new THREE.HemisphereLight(0xd6c064, 0x141005, 0.32));
 scene.add(new THREE.AmbientLight(0x2c250d, 0.46));
+world.add(monster.group);
+hideMonster(0);
 
 function makeCanvasTexture(size, paint) {
   const canvasTexture = document.createElement("canvas");
@@ -291,8 +304,122 @@ function makeMaterials() {
       depthWrite: false,
       side: THREE.DoubleSide,
     }),
+    monster: new THREE.MeshBasicMaterial({
+      color: 0x030302,
+      fog: true,
+    }),
+    monsterEdge: new THREE.MeshBasicMaterial({
+      color: 0x1b1707,
+      transparent: true,
+      opacity: 0.82,
+      fog: true,
+    }),
+    monsterEye: new THREE.MeshBasicMaterial({
+      color: 0xfff2a0,
+      fog: false,
+    }),
+    monsterShadow: new THREE.MeshBasicMaterial({
+      map: makeSoftColumnShadowTexture(),
+      transparent: true,
+      opacity: 0.86,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    }),
     light: new THREE.MeshBasicMaterial({ color: 0xfff3bf }),
   };
+}
+
+function createMonster() {
+  const group = new THREE.Group();
+  group.visible = false;
+
+  const shadow = new THREE.Mesh(reusable.monsterShadow, materials.monsterShadow);
+  shadow.rotation.x = -Math.PI / 2;
+  shadow.position.y = 0.018;
+  shadow.scale.set(0.55, 1.55, 1);
+  group.add(shadow);
+
+  const torso = new THREE.Mesh(reusable.monsterBody, materials.monster);
+  torso.name = "torso";
+  torso.position.set(0, 1.95, 0);
+  torso.scale.set(0.55, 1.45, 0.28);
+  group.add(torso);
+
+  const chestRidge = new THREE.Mesh(reusable.monsterBody, materials.monsterEdge);
+  chestRidge.position.set(0.02, 2.08, -0.03);
+  chestRidge.scale.set(0.38, 1.18, 0.16);
+  group.add(chestRidge);
+
+  const neck = addMonsterLimb(group, new THREE.Vector3(0, 2.52, 0), new THREE.Vector3(0, 2.83, -0.03), 0.08);
+
+  const head = new THREE.Mesh(reusable.monsterHead, materials.monster);
+  head.name = "head";
+  head.position.set(0, 2.96, -0.06);
+  head.scale.set(0.72, 0.48, 0.56);
+  group.add(head);
+
+  for (const x of [-0.105, 0.105]) {
+    const eye = new THREE.Mesh(reusable.monsterEye, materials.monsterEye.clone());
+    eye.name = "eye";
+    eye.position.set(x, 2.98, -0.36);
+    eye.scale.set(1, 0.72, 1);
+    group.add(eye);
+  }
+
+  const limbPoints = [
+    [new THREE.Vector3(-0.28, 2.34, 0), new THREE.Vector3(-0.88, 1.42, 0.1), new THREE.Vector3(-1.15, 0.1, -0.35)],
+    [new THREE.Vector3(0.28, 2.3, 0), new THREE.Vector3(0.92, 1.28, -0.08), new THREE.Vector3(1.24, 0.08, -0.5)],
+    [new THREE.Vector3(-0.18, 1.34, 0), new THREE.Vector3(-0.52, 0.78, 0.25), new THREE.Vector3(-0.72, 0.05, 0.66)],
+    [new THREE.Vector3(0.18, 1.34, 0), new THREE.Vector3(0.45, 0.72, -0.12), new THREE.Vector3(0.68, 0.05, -0.6)],
+  ];
+
+  for (const points of limbPoints) {
+    addSegmentedMonsterLimb(group, points);
+  }
+
+  for (let i = 0; i < 7; i += 1) {
+    const hair = addMonsterLimb(
+      group,
+      new THREE.Vector3((Math.random() - 0.5) * 0.28, 3.06, -0.1),
+      new THREE.Vector3((Math.random() - 0.5) * 0.68, 2.62 - Math.random() * 0.34, -0.2 - Math.random() * 0.2),
+      0.014,
+    );
+    hair.name = "hair";
+  }
+
+  neck.name = "neck";
+  return {
+    group,
+    baseScale: 1,
+    state: "hidden",
+    stateUntil: 0,
+    nextRelocate: 7,
+    stareTime: 0,
+    chargeSpeed: 0,
+  };
+}
+
+function addSegmentedMonsterLimb(group, points) {
+  for (let i = 0; i < points.length - 1; i += 1) {
+    addMonsterLimb(group, points[i], points[i + 1], i === 0 ? 0.045 : 0.032);
+  }
+  for (const point of points) {
+    const joint = new THREE.Mesh(reusable.monsterJoint, materials.monster);
+    joint.position.copy(point);
+    joint.scale.setScalar(0.8 + Math.random() * 0.45);
+    group.add(joint);
+  }
+}
+
+function addMonsterLimb(group, from, to, radius) {
+  const limb = new THREE.Mesh(reusable.monsterLimb, materials.monster);
+  const direction = new THREE.Vector3().subVectors(to, from);
+  const length = direction.length();
+  limb.position.copy(from).add(to).multiplyScalar(0.5);
+  limb.scale.set(radius / 0.045, length, radius / 0.045);
+  limb.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
+  group.add(limb);
+  return limb;
 }
 
 function tileKey(x, z) {
@@ -501,7 +628,104 @@ function syncTiles() {
   }
 }
 
+function hideMonster(elapsed) {
+  monster.group.visible = false;
+  monster.state = "hidden";
+  monster.nextRelocate = elapsed + 7 + Math.random() * 13;
+  monster.chargeSpeed = 0;
+}
+
+function relocateMonster(elapsed) {
+  const forward = new THREE.Vector3(Math.sin(player.yaw), 0, -Math.cos(player.yaw));
+  const side = new THREE.Vector3(forward.z, 0, -forward.x);
+  const sideSign = Math.random() > 0.5 ? 1 : -1;
+  const distance = 18 + Math.random() * 12;
+  const sideOffset = sideSign * (4 + Math.random() * 5);
+
+  monster.group.position.copy(player.position);
+  monster.group.position.y = 0;
+  monster.group.position.addScaledVector(forward, distance);
+  monster.group.position.addScaledVector(side, sideOffset);
+  monster.baseScale = 0.92 + Math.random() * 0.16;
+  monster.group.scale.setScalar(monster.baseScale);
+  monster.group.visible = true;
+  monster.state = "stare";
+  monster.stateUntil = elapsed + 1.2 + Math.random() * 1.4;
+  monster.stareTime = elapsed;
+  monster.chargeSpeed = 12 + Math.random() * 4;
+}
+
+function updateMonster(elapsed, delta) {
+  if (player.dead) return;
+
+  if (monster.state === "hidden") {
+    if (pointerLocked && elapsed >= monster.nextRelocate) {
+      relocateMonster(elapsed);
+    }
+    return;
+  }
+
+  const monsterPosition = monster.group.position;
+  monsterTarget.set(player.position.x, 1.55, player.position.z);
+  monster.group.lookAt(monsterTarget);
+  monster.group.rotation.z = Math.sin(elapsed * 6.8) * 0.035;
+  monster.group.position.y = Math.sin(elapsed * 9.0) * 0.025;
+
+  const distance = monsterPosition.distanceTo(player.position);
+  if (monster.state === "stare") {
+    const starePulse = 1 + Math.sin(elapsed * 18) * 0.035;
+    monster.group.scale.setScalar(monster.baseScale * starePulse);
+    if (elapsed >= monster.stateUntil || distance < 11) {
+      monster.state = "charge";
+      monster.stateUntil = elapsed + 5;
+    }
+    return;
+  }
+
+  if (monster.state === "charge") {
+    const direction = new THREE.Vector3(player.position.x - monsterPosition.x, 0, player.position.z - monsterPosition.z);
+    const horizontalDistance = direction.length();
+    if (horizontalDistance > 0.001) {
+      direction.normalize();
+      monsterPosition.addScaledVector(direction, monster.chargeSpeed * delta);
+    }
+    monster.group.scale.setScalar(1.05 + Math.sin(elapsed * 24) * 0.04);
+
+    if (horizontalDistance < 1.15) {
+      killPlayer();
+      return;
+    }
+
+    if (elapsed >= monster.stateUntil || horizontalDistance > 55) {
+      hideMonster(elapsed);
+    }
+  }
+}
+
+function killPlayer() {
+  player.dead = true;
+  velocity.set(0, 0, 0);
+  document.body.classList.add("dead");
+  if (document.pointerLockElement) {
+    document.exitPointerLock();
+  }
+}
+
+function resetPlayer() {
+  player.dead = false;
+  player.position.set(0, settings.eyeHeight, 0);
+  player.yaw = 0;
+  player.pitch = 0;
+  player.onGround = true;
+  velocity.set(0, 0, 0);
+  document.body.classList.remove("dead");
+  hideMonster(clock.elapsedTime);
+  syncTiles();
+}
+
 function movePlayer(delta) {
+  if (player.dead) return;
+
   const wish = new THREE.Vector3();
   const forward = Number(keys.has("KeyW")) - Number(keys.has("KeyS"));
   const right = Number(keys.has("KeyD")) - Number(keys.has("KeyA"));
@@ -573,9 +797,10 @@ function animate() {
   movePlayer(delta);
   syncTiles();
   updateLights(elapsed);
+  updateMonster(elapsed, delta);
 
   camera.position.copy(player.position);
-  const walking = player.onGround && (Math.abs(velocity.x) + Math.abs(velocity.z) > 0.45);
+  const walking = !player.dead && player.onGround && (Math.abs(velocity.x) + Math.abs(velocity.z) > 0.45);
   if (walking) {
     camera.position.y += Math.sin(elapsed * 10.5) * 0.025;
     camera.rotation.z = Math.sin(elapsed * 5.2) * 0.006;
@@ -608,6 +833,12 @@ function onPointerMove(event) {
 }
 
 startButton.addEventListener("click", () => {
+  if (player.dead) resetPlayer();
+  document.body.requestPointerLock();
+});
+
+restartButton.addEventListener("click", () => {
+  resetPlayer();
   document.body.requestPointerLock();
 });
 

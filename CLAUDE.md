@@ -52,6 +52,7 @@ python3 -m http.server 8000
 | `tiles` | 현재 생성된 타일 Map |
 | `blockerObjects` | 벽/기둥 충돌 대상 |
 | `flickerLights` | 형광등 깜빡임 상태 배열 |
+| `monster` | 가끔 출현해 응시 후 돌진하는 괴물 상태 |
 
 ### 주요 함수
 
@@ -66,6 +67,7 @@ python3 -m http.server 8000
 | `movePlayer()` | WASD 이동, 중력, 점프, 천장 제한 처리 |
 | `resolveHorizontalCollision()` | 벽/기둥 수평 충돌 처리 |
 | `updateLights()` | 형광등 깜빡임과 밝기 변화 처리 |
+| `updateMonster()` | 괴물 숨김/응시/돌진/사망 상태 처리 |
 | `animate()` | 이동, 타일 동기화, 카메라 흔들림, 렌더링 루프 |
 
 ## 게임 상수
@@ -112,6 +114,8 @@ settings.renderRadius = 3
 - 그림자는 실제 shadowMap이 아니라 투명 CanvasTexture 평면으로 표현한다.
 - `renderer.shadowMap.enabled = false` 상태를 유지한다.
 - 현실감을 높일 때도 표면 가시성이 깨지지 않는 방식을 먼저 선택한다.
+- 괴물은 이미지 에셋이 아니라 `createMonster()`가 만드는 절차적 메시다.
+- 괴물 AI는 `hidden → stare → charge` 흐름이며 닿으면 `killPlayer()`로 사망 오버레이를 띄운다.
 
 ## GitHub
 
