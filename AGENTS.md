@@ -66,7 +66,7 @@ python3 -m http.server 8000
 - 그림자는 실제 그림자가 아니라 CanvasTexture 기반 투명 평면으로 만든다.
 - `renderer.shadowMap.enabled = false`를 유지한다.
 - 현실감을 높일 때도 먼저 “항상 보이는 장면”을 보장한다.
-- 괴물은 `createMonster()`의 절차적 Three.js 메시이며, 가끔 플레이어가 보는 방향에 출현한 뒤 돌진해서 플레이어를 죽인다.
+- 괴물은 `createMonster()`의 절차적 Three.js 메시이며, 가끔 플레이어가 보는 방향에 붉은 눈 glow와 함께 출현한 뒤 돌진해서 플레이어를 죽인다.
 
 ## 검증
 

@@ -84,7 +84,7 @@ const reusable = {
   monsterLimb: new THREE.CylinderGeometry(0.035, 0.055, 1, 8),
   monsterJoint: new THREE.SphereGeometry(0.085, 10, 8),
   monsterHead: new THREE.SphereGeometry(0.34, 18, 12),
-  monsterEye: new THREE.SphereGeometry(0.035, 8, 6),
+  monsterEye: new THREE.SphereGeometry(0.07, 10, 8),
   monsterBody: new THREE.SphereGeometry(0.42, 14, 10),
   monsterShadow: new THREE.CircleGeometry(2.2, 32),
 };
@@ -305,17 +305,23 @@ function makeMaterials() {
       side: THREE.DoubleSide,
     }),
     monster: new THREE.MeshBasicMaterial({
-      color: 0x030302,
-      fog: true,
+      color: 0x100c05,
+      fog: false,
     }),
     monsterEdge: new THREE.MeshBasicMaterial({
-      color: 0x1b1707,
+      color: 0x3a2d0e,
       transparent: true,
-      opacity: 0.82,
-      fog: true,
+      opacity: 0.9,
+      fog: false,
     }),
     monsterEye: new THREE.MeshBasicMaterial({
-      color: 0xfff2a0,
+      color: 0xff1600,
+      fog: false,
+    }),
+    monsterEyeGlow: new THREE.MeshBasicMaterial({
+      color: 0xff2b00,
+      transparent: true,
+      opacity: 0.36,
       fog: false,
     }),
     monsterShadow: new THREE.MeshBasicMaterial({
@@ -359,6 +365,12 @@ function createMonster() {
   group.add(head);
 
   for (const x of [-0.105, 0.105]) {
+    const glow = new THREE.Mesh(reusable.monsterEye, materials.monsterEyeGlow);
+    glow.name = "eyeGlow";
+    glow.position.set(x, 2.98, -0.365);
+    glow.scale.set(2.7, 1.9, 2.7);
+    group.add(glow);
+
     const eye = new THREE.Mesh(reusable.monsterEye, materials.monsterEye.clone());
     eye.name = "eye";
     eye.position.set(x, 2.98, -0.36);
@@ -639,14 +651,14 @@ function relocateMonster(elapsed) {
   const forward = new THREE.Vector3(Math.sin(player.yaw), 0, -Math.cos(player.yaw));
   const side = new THREE.Vector3(forward.z, 0, -forward.x);
   const sideSign = Math.random() > 0.5 ? 1 : -1;
-  const distance = 20 + Math.random() * 10;
-  const sideOffset = sideSign * (0.35 + Math.random() * 1.25);
+  const distance = 13 + Math.random() * 7;
+  const sideOffset = sideSign * (0.2 + Math.random() * 0.8);
 
   monster.group.position.copy(player.position);
   monster.group.position.y = 0;
   monster.group.position.addScaledVector(forward, distance);
   monster.group.position.addScaledVector(side, sideOffset);
-  monster.baseScale = 0.92 + Math.random() * 0.16;
+  monster.baseScale = 1.08 + Math.random() * 0.18;
   monster.group.scale.setScalar(monster.baseScale);
   monster.group.visible = true;
   monster.state = "stare";

@@ -115,7 +115,7 @@ settings.renderRadius = 3
 - `renderer.shadowMap.enabled = false` 상태를 유지한다.
 - 현실감을 높일 때도 표면 가시성이 깨지지 않는 방식을 먼저 선택한다.
 - 괴물은 이미지 에셋이 아니라 `createMonster()`가 만드는 절차적 메시다.
-- 괴물 AI는 플레이어가 바라보는 방향에 `hidden → stare → charge` 흐름으로 나타나며 닿으면 `killPlayer()`로 빨간 사망 오버레이를 천천히 띄운다.
+- 괴물 AI는 플레이어가 바라보는 방향에 `hidden → stare → charge` 흐름으로 나타나며, 붉은 눈 glow로 식별된다. 닿으면 `killPlayer()`로 빨간 사망 오버레이를 아주 천천히 띄운다.
 
 ## GitHub
 

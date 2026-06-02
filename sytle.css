@@ -105,7 +105,7 @@ body::after {
     rgba(0, 0, 0, 0.72);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 900ms ease;
+  transition: opacity 1600ms ease;
 }
 
 .death-title {
@@ -120,8 +120,8 @@ body::after {
     0 0 42px rgba(120, 0, 0, 0.62),
     0 4px 22px #000;
   transition:
-    opacity 2200ms ease,
-    transform 2200ms ease;
+    opacity 4200ms ease,
+    transform 4200ms ease;
 }
 
 #restartButton {
