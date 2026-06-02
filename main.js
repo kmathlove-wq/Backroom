@@ -643,7 +643,7 @@ function syncTiles() {
 function hideMonster(elapsed) {
   monster.group.visible = false;
   monster.state = "hidden";
-  monster.nextRelocate = elapsed + 7 + Math.random() * 13;
+  monster.nextRelocate = elapsed + 18 + Math.random() * 22;
   monster.chargeSpeed = 0;
 }
 
@@ -651,8 +651,8 @@ function relocateMonster(elapsed) {
   const forward = new THREE.Vector3(Math.sin(player.yaw), 0, -Math.cos(player.yaw));
   const side = new THREE.Vector3(forward.z, 0, -forward.x);
   const sideSign = Math.random() > 0.5 ? 1 : -1;
-  const distance = 13 + Math.random() * 7;
-  const sideOffset = sideSign * (0.2 + Math.random() * 0.8);
+  const distance = 18 + Math.random() * 10;
+  const sideOffset = sideSign * (2.8 + Math.random() * 2.6);
 
   monster.group.position.copy(player.position);
   monster.group.position.y = 0;
@@ -664,7 +664,7 @@ function relocateMonster(elapsed) {
   monster.state = "stare";
   monster.stateUntil = elapsed + 1.0 + Math.random() * 1.2;
   monster.stareTime = elapsed;
-  monster.chargeSpeed = 12 + Math.random() * 4;
+  monster.chargeSpeed = 9.5 + Math.random() * 3.2;
 }
 
 function updateMonster(elapsed, delta) {
@@ -708,7 +708,7 @@ function updateMonster(elapsed, delta) {
       return;
     }
 
-    if (elapsed >= monster.stateUntil || horizontalDistance > 55) {
+    if (elapsed >= monster.stateUntil || horizontalDistance > 36) {
       hideMonster(elapsed);
     }
   }
