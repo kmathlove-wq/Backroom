@@ -81,8 +81,8 @@ const reusable = {
   corridorShadow: new THREE.PlaneGeometry(6.2, 17.8),
   shortShadow: new THREE.PlaneGeometry(3.6, 4.2),
   columnShadow: new THREE.CircleGeometry(1.55, 28),
-  monsterLimb: new THREE.CylinderGeometry(0.035, 0.055, 1, 8),
-  monsterJoint: new THREE.SphereGeometry(0.085, 10, 8),
+  monsterLimb: new THREE.CylinderGeometry(0.055, 0.075, 1, 8),
+  monsterJoint: new THREE.SphereGeometry(0.11, 10, 8),
   monsterHead: new THREE.SphereGeometry(0.34, 18, 12),
   monsterEye: new THREE.SphereGeometry(0.07, 10, 8),
   monsterBody: new THREE.SphereGeometry(0.42, 14, 10),
@@ -314,13 +314,13 @@ function makeMaterials() {
       side: THREE.DoubleSide,
     }),
     monster: new THREE.MeshBasicMaterial({
-      color: 0x100c05,
+      color: 0x241a08,
       fog: false,
     }),
     monsterEdge: new THREE.MeshBasicMaterial({
-      color: 0x3a2d0e,
+      color: 0x6d551d,
       transparent: true,
-      opacity: 0.9,
+      opacity: 0.96,
       fog: false,
     }),
     monsterEye: new THREE.MeshBasicMaterial({
@@ -330,7 +330,8 @@ function makeMaterials() {
     monsterEyeGlow: new THREE.MeshBasicMaterial({
       color: 0xff2b00,
       transparent: true,
-      opacity: 0.36,
+      opacity: 0.58,
+      depthWrite: false,
       fog: false,
     }),
     monsterShadow: new THREE.MeshBasicMaterial({
@@ -357,12 +358,12 @@ function createMonster() {
   const torso = new THREE.Mesh(reusable.monsterBody, materials.monster);
   torso.name = "torso";
   torso.position.set(0, 1.72, 0);
-  torso.scale.set(0.36, 1.25, 0.2);
+  torso.scale.set(0.46, 1.32, 0.26);
   group.add(torso);
 
   const chestRidge = new THREE.Mesh(reusable.monsterBody, materials.monsterEdge);
   chestRidge.position.set(0.02, 1.86, -0.03);
-  chestRidge.scale.set(0.25, 0.98, 0.12);
+  chestRidge.scale.set(0.32, 1.06, 0.16);
   group.add(chestRidge);
 
   const neck = addMonsterLimb(group, new THREE.Vector3(0, 2.34, 0), new THREE.Vector3(0, 2.62, -0.03), 0.055);
@@ -370,21 +371,23 @@ function createMonster() {
   const head = new THREE.Mesh(reusable.monsterHead, materials.monster);
   head.name = "head";
   head.position.set(0, 2.72, -0.06);
-  head.scale.set(0.68, 0.42, 0.52);
+  head.scale.set(0.76, 0.46, 0.58);
   group.add(head);
 
-  for (const x of [-0.105, 0.105]) {
-    const glow = new THREE.Mesh(reusable.monsterEye, materials.monsterEyeGlow);
-    glow.name = "eyeGlow";
-    glow.position.set(x, 2.74, -0.345);
-    glow.scale.set(2.7, 1.9, 2.7);
-    group.add(glow);
+  for (const z of [-0.345, 0.345]) {
+    for (const x of [-0.105, 0.105]) {
+      const glow = new THREE.Mesh(reusable.monsterEye, materials.monsterEyeGlow);
+      glow.name = "eyeGlow";
+      glow.position.set(x, 2.74, z);
+      glow.scale.set(3.15, 2.2, 3.15);
+      group.add(glow);
 
-    const eye = new THREE.Mesh(reusable.monsterEye, materials.monsterEye.clone());
-    eye.name = "eye";
-    eye.position.set(x, 2.74, -0.34);
-    eye.scale.set(1, 0.72, 1);
-    group.add(eye);
+      const eye = new THREE.Mesh(reusable.monsterEye, materials.monsterEye.clone());
+      eye.name = "eye";
+      eye.position.set(x, 2.74, z * 0.985);
+      eye.scale.set(1.25, 0.85, 1.25);
+      group.add(eye);
+    }
   }
 
   const limbPoints = [
@@ -425,7 +428,7 @@ function addSegmentedMonsterLimb(group, points) {
     addMonsterLimb(group, points[i], points[i + 1], i === 0 ? 0.045 : 0.032);
   }
   for (const point of points) {
-    const joint = new THREE.Mesh(reusable.monsterJoint, materials.monster);
+    const joint = new THREE.Mesh(reusable.monsterJoint, materials.monsterEdge);
     joint.position.copy(point);
     joint.scale.setScalar(0.8 + Math.random() * 0.45);
     group.add(joint);
@@ -683,7 +686,7 @@ function relocateMonster(elapsed) {
     monster.group.position.addScaledVector(forward, distance);
   }
 
-  monster.baseScale = 0.88 + Math.random() * 0.06;
+  monster.baseScale = 0.96 + Math.random() * 0.07;
   monster.group.scale.setScalar(monster.baseScale);
   monster.group.visible = true;
   monster.state = "stare";
