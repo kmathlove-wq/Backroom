@@ -121,6 +121,7 @@ const blockerObjects = [];
 const flickerLights = [];
 const monster = createMonster();
 const monsterTarget = new THREE.Vector3();
+const MONSTER_GROUND_Y = 0.035;
 const audio = {
   context: null,
   master: null,
@@ -670,7 +671,7 @@ function relocateMonster(elapsed) {
   const sideOffset = sideSign * (1.2 + Math.random() * 1.8);
 
   monster.group.position.copy(player.position);
-  monster.group.position.y = 0;
+  monster.group.position.y = MONSTER_GROUND_Y;
   monster.group.position.addScaledVector(forward, distance);
   monster.group.position.addScaledVector(side, sideOffset);
 
@@ -678,7 +679,7 @@ function relocateMonster(elapsed) {
   toMonster.y = 0;
   if (toMonster.dot(forward) < 8) {
     monster.group.position.copy(player.position);
-    monster.group.position.y = 0;
+    monster.group.position.y = MONSTER_GROUND_Y;
     monster.group.position.addScaledVector(forward, distance);
   }
 
@@ -706,9 +707,9 @@ function updateMonster(elapsed, delta) {
   monsterTarget.set(player.position.x, monster.group.position.y, player.position.z);
   monster.group.lookAt(monsterTarget);
   monster.group.rotation.z = Math.sin(elapsed * 6.8) * 0.035;
-  monster.group.position.y = 0;
+  monster.group.position.y = MONSTER_GROUND_Y;
 
-  const distance = monsterPosition.distanceTo(player.position);
+  const distance = horizontalMonsterDistance();
   if (monster.state === "stare") {
     const starePulse = 1 + Math.sin(elapsed * 18) * 0.035;
     monster.group.scale.setScalar(monster.baseScale * starePulse);
@@ -728,7 +729,7 @@ function updateMonster(elapsed, delta) {
     }
     monster.group.scale.setScalar(monster.baseScale * (1.04 + Math.sin(elapsed * 24) * 0.035));
 
-    if (horizontalDistance < 1.15) {
+    if (canMonsterKill(horizontalDistance)) {
       killPlayer();
       return;
     }
@@ -737,6 +738,32 @@ function updateMonster(elapsed, delta) {
       hideMonster(elapsed);
     }
   }
+}
+
+function horizontalMonsterDistance() {
+  const dx = monster.group.position.x - player.position.x;
+  const dz = monster.group.position.z - player.position.z;
+  return Math.hypot(dx, dz);
+}
+
+function canMonsterKill(horizontalDistance) {
+  if (!monster.group.visible || monster.group.position.y < 0.02) return false;
+  if (horizontalDistance > 1.05) return false;
+
+  const cameraForward = new THREE.Vector3();
+  camera.getWorldDirection(cameraForward);
+  cameraForward.y = 0;
+  if (cameraForward.lengthSq() < 0.001) return true;
+  cameraForward.normalize();
+
+  const toMonster = new THREE.Vector3(
+    monster.group.position.x - player.position.x,
+    0,
+    monster.group.position.z - player.position.z,
+  );
+  if (toMonster.lengthSq() < 0.001) return true;
+  toMonster.normalize();
+  return toMonster.dot(cameraForward) > -0.45;
 }
 
 function killPlayer() {
