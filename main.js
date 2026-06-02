@@ -314,13 +314,13 @@ function makeMaterials() {
       side: THREE.DoubleSide,
     }),
     monster: new THREE.MeshBasicMaterial({
-      color: 0x241a08,
+      color: 0x030302,
       fog: false,
     }),
     monsterEdge: new THREE.MeshBasicMaterial({
-      color: 0x6d551d,
+      color: 0x111006,
       transparent: true,
-      opacity: 0.96,
+      opacity: 0.9,
       fog: false,
     }),
     monsterEye: new THREE.MeshBasicMaterial({
@@ -330,7 +330,7 @@ function makeMaterials() {
     monsterEyeGlow: new THREE.MeshBasicMaterial({
       color: 0xff2b00,
       transparent: true,
-      opacity: 0.58,
+      opacity: 0.72,
       depthWrite: false,
       fog: false,
     }),
@@ -885,13 +885,14 @@ function animate() {
 function updateLights(elapsed) {
   let flickerTotal = 0;
   for (const entry of flickerLights) {
-    const buzz = Math.sin(elapsed * entry.speed + entry.phase) * 0.3;
-    const snap = Math.sin(elapsed * 18.0 + entry.phase * 1.7) > 0.86 ? -0.95 : 0;
-    const stutter = Math.sin(elapsed * 43.0 + entry.phase) > 0.965 ? -0.45 : 0;
-    const intensity = Math.max(0.12, entry.base + buzz + snap + stutter);
+    const buzz = Math.sin(elapsed * entry.speed + entry.phase) * 0.36;
+    const snap = Math.sin(elapsed * 17.0 + entry.phase * 1.7) > 0.72 ? -1.12 : 0;
+    const stutter = Math.sin(elapsed * 51.0 + entry.phase) > 0.9 ? -0.62 : 0;
+    const blackout = Math.sin(elapsed * 7.0 + entry.phase * 2.3) > 0.955 ? -1.45 : 0;
+    const intensity = Math.max(0.04, entry.base + buzz + snap + stutter + blackout);
     flickerTotal += Math.max(0, 1.4 - intensity);
     entry.point.intensity = intensity;
-    entry.material.color.setScalar(0.62 + intensity * 0.22);
+    entry.material.color.setScalar(0.42 + intensity * 0.28);
   }
   audio.flickerLevel = flickerLights.length ? flickerTotal / flickerLights.length : 0;
 }

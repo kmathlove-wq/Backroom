@@ -118,7 +118,7 @@ settings.renderRadius = 3
 - `renderer.shadowMap.enabled = false` 상태를 유지한다.
 - 현실감을 높일 때도 표면 가시성이 깨지지 않는 방식을 먼저 선택한다.
 - 괴물은 이미지 에셋이 아니라 `createMonster()`가 만드는 절차적 메시다.
-- 괴물 AI는 카메라가 실제로 바라보는 앞방향 근처에 `hidden → short stare → charge` 흐름으로 나타난다. 본체 대비와 앞뒤 붉은 눈 glow를 높여 그림자만 보이지 않게 한다.
+- 괴물 AI는 카메라 앞방향 근처에 `hidden → short stare → charge` 흐름으로 나타난다. 괴물은 검은 실루엣과 붉은 눈 glow를 유지하고, 형광등은 수시로 강하게 깜빡인다.
 - 사운드는 외부 파일 없이 Web Audio로 합성한다. 시작 클릭 후 배경 드론, 형광등 지직거림, 괴물 비명이 활성화된다.
 
 ## GitHub
