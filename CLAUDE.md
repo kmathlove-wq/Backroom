@@ -11,14 +11,14 @@ Three.js 기반 1인칭 백룸 탐험 웹앱. 별도 빌드 툴 없이 순수 ES
 Backroom/
 ├── index.html                 # importmap + canvas + HUD DOM + favicon 연결
 ├── main.js                    # Three.js 장면, 월드 생성, 이동/점프/충돌
-├── sytle.css                  # 전체화면 캔버스 + HUD + 비네팅/노이즈
+├── style.css                  # 전체화면 캔버스 + HUD + 비네팅/노이즈
 ├── backroom-favicon-2026.svg  # 고유 favicon, 캐시/이름 충돌 방지
 ├── AGENTS.md                  # Codex/에이전트 작업 규칙
 ├── CLAUDE.md                  # Claude용 프로젝트 지식
 └── CNAME                      # GitHub Pages 도메인 설정
 ```
 
-주의: CSS 파일명은 `sytle.css`가 현재 실제 이름이다. 사용자 요청 없이 `style.css`로 고치지 않는다.
+주의: CSS 파일명은 `style.css`가 현재 실제 이름이다.
 
 ## 실행 방법
 
@@ -108,7 +108,7 @@ settings.renderRadius = 3
 .crosshair   → 중앙 조준점
 ```
 
-`sytle.css`의 `body::before`, `body::after`는 비네팅과 노이즈 오버레이를 만든다.
+`style.css`의 `body::before`, `body::after`는 비네팅과 노이즈 오버레이를 만든다.
 
 ## 렌더링 주의사항
 
