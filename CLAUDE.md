@@ -99,6 +99,8 @@ settings.renderRadius = 3
 | Shift | 달리기 |
 | ESC | 포인터 락 해제 |
 
+포인터 락 전에는 WASD/Space 입력을 무시한다. `들어가기` 클릭 후에만 이동이 활성화된다.
+
 ## HUD / DOM 구조
 
 ```text

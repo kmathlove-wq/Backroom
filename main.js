@@ -798,6 +798,11 @@ function resetPlayer() {
 
 function movePlayer(delta) {
   if (player.dead) return;
+  if (!pointerLocked) {
+    velocity.x = 0;
+    velocity.z = 0;
+    return;
+  }
 
   const wish = new THREE.Vector3();
   const forward = Number(keys.has("KeyW")) - Number(keys.has("KeyS"));
@@ -1036,11 +1041,17 @@ restartButton.addEventListener("click", () => {
 document.addEventListener("pointerlockchange", () => {
   pointerLocked = document.pointerLockElement === document.body;
   document.body.classList.toggle("playing", pointerLocked);
+  if (!pointerLocked) {
+    keys.clear();
+    velocity.x = 0;
+    velocity.z = 0;
+  }
 });
 
 document.addEventListener("mousemove", onPointerMove);
 
 document.addEventListener("keydown", (event) => {
+  if (!pointerLocked || player.dead) return;
   keys.add(event.code);
   if (event.code === "Space") event.preventDefault();
 });
