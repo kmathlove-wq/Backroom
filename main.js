@@ -1029,6 +1029,7 @@ function onPointerMove(event) {
 startButton.addEventListener("click", () => {
   ensureAudio();
   if (player.dead) resetPlayer();
+  else hideMonster(clock.elapsedTime);
   document.body.requestPointerLock();
 });
 

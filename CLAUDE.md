@@ -121,6 +121,7 @@ settings.renderRadius = 3
 - 현실감을 높일 때도 표면 가시성이 깨지지 않는 방식을 먼저 선택한다.
 - 괴물은 이미지 에셋이 아니라 `createMonster()`가 만드는 절차적 메시다.
 - 괴물 AI는 카메라 앞방향 근처에 `hidden → short stare → charge` 흐름으로 나타난다. 괴물은 검은 실루엣과 붉은 눈 glow를 유지하고, X/Z 기울기 없이 Y축 yaw만 회전한다.
+- `들어가기` 클릭 시 `hideMonster(clock.elapsedTime)`으로 몬스터 출현 타이머를 새로 잡아 시작 전 대기 시간이 누적되지 않게 한다.
 - 사운드는 외부 파일 없이 Web Audio로 합성한다. 시작 클릭 후 배경 드론, 형광등 지직거림, 괴물 비명이 활성화된다.
 
 ## GitHub
